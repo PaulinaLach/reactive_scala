@@ -1,4 +1,9 @@
-package com.example
+package com.first
+
+import java.util
+
+import akka.actor.{ActorSystem, Props}
+import com.first.actors.{Auction, Buyer}
 
 /**
  * This is actually just a small wrapper around the generic launcher
@@ -10,16 +15,17 @@ package com.example
  *
  * Thus you could also run the application with a
  * command similar to the following:
- * java -classpath  akka.Main com.example.actors.HelloWorldActor
+ * java -classpath  akka.Main com.first.actors.HelloWorldActor
  *
  * @author alias
  */
 object Starter {
 
   def main(args: Array[String]): Unit = {
-    val initialActor = classOf[HelloWorldActor].getName
+    val system = ActorSystem()
 
-    akka.Main.main(Array(initialActor))
+    val auctions = for (i <- 1 to 5) yield system.actorOf(Props(classOf[Auction], i), "Auction" + i)
+    val buyers = for (i <- 1 to 5) yield system.actorOf(Props(classOf[Buyer], auctions), "Buyer" + i)
   }
 
 }
