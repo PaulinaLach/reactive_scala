@@ -1,4 +1,4 @@
-package com.second.actors
+package com.third.actors
 
 import akka.actor.{Actor, ActorRef}
 import akka.event.LoggingReceive

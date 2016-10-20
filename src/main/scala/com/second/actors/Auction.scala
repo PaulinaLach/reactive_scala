@@ -8,6 +8,7 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 case class Bid(amount: Float)
+case class WinAuction(amount: Float, i: Int)
 case object Relist
 case object BidTimer
 case object DeleteTimer
@@ -17,7 +18,8 @@ case object FailedBid
 
 class Auction(val i: Int) extends Actor {
   var timer: Cancellable = null
-  var bidValue = 0.0
+  var bidValue = 0.0f
+  var winner: ActorRef = null
 
   def receive: Receive = LoggingReceive {
     case InitializeAuction =>
@@ -32,8 +34,7 @@ class Auction(val i: Int) extends Actor {
       context become ignored
 
     case Bid(amount) if bidValue < amount =>
-      println(s"auction $i - previous amount: $bidValue new amount: $amount")
-      bidValue = amount
+      bidAuction(amount)
       context become activated
     case _ => sender ! FailedBid
   }
@@ -50,11 +51,10 @@ class Auction(val i: Int) extends Actor {
 
   def activated: Receive = LoggingReceive {
     case Bid(amount) if bidValue < amount =>
-      println(s"auction $i - previous amount: $bidValue new amount: $amount")
-      bidValue = amount
-      sender ! SuccessfulBid(amount)
+      bidAuction(amount)
     case BidTimer =>
       println(s"Auction $i -> sold for $bidValue")
+      winner ! WinAuction(bidValue, i)
       rescheduleOnce(20 seconds, DeleteTimer)
       context become sold
     case _ => sender ! FailedBid
@@ -69,5 +69,12 @@ class Auction(val i: Int) extends Actor {
   private def rescheduleOnce(value: FiniteDuration, caseObject: Object) = {
     if (timer != null) timer.cancel()
     timer = context.system.scheduler.scheduleOnce(value, self, caseObject)
+  }
+
+  private def bidAuction(amount: Float): Unit = {
+    winner = sender
+    println(s"auction $i - previous amount: $bidValue new amount: $amount")
+    bidValue = amount
+    sender ! SuccessfulBid(amount)
   }
 }
