@@ -3,15 +3,26 @@ package com.second.actors
 import akka.actor.{Actor, ActorRef}
 import akka.event.LoggingReceive
 
-class Buyer(val auctions: Vector[ActorRef]) extends Actor {
+import scala.util.Random
 
-  override def preStart(): Unit = {
-    super.preStart()
-    auctions.foreach(_ ! Bid(scala.util.Random.nextInt(100)+10))
+case object Start
+
+
+class Buyer(var money: Float, val auctions: Vector[ActorRef]) extends Actor {
+  def receive: Receive = LoggingReceive {
+    case Start =>
+      println("Starting buyer")
+      auctions.foreach((auction) => {
+        auction ! Bid(Random.nextInt(1000) + 10)
+      })
+      context become bidding
   }
 
-  def receive = LoggingReceive {
-    case Done => println("success")
-    case Failed => println("failed")
+  def bidding: Receive = LoggingReceive {
+    case SuccessfulBid(amount) =>
+      money -= amount
+      println("Bid successfully")
+    case FailedBid =>
+      println("Bid failure: ")
   }
 }

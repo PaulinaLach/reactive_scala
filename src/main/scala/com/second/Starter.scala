@@ -1,7 +1,9 @@
 package com.second
 
 import akka.actor.{ActorSystem, Props}
-import com.first.actors.Auction
+import com.second.actors.{Auction, Buyer, InitializeAuction, Start}
+
+import scala.concurrent.Await
 
 /**
  * This is actually just a small wrapper around the generic launcher
@@ -23,7 +25,11 @@ object Starter {
     val system = ActorSystem()
 
     val auctions = for (i <- 1 to 5) yield system.actorOf(Props(classOf[Auction], i), "Auction" + i)
-    val buyers = for (i <- 1 to 5) yield system.actorOf(Props(classOf[actors.Buyer], auctions), "Buyer" + i)
+    for (auction <- auctions) auction ! InitializeAuction
+    val buyers = for (i <- 1 to 5) yield system.actorOf(Props(classOf[Buyer], 0.0f, auctions), "Buyer" + i)
+    for (buyer <- buyers) buyer ! Start
+
+    Thread sleep 6000
   }
 
 }
