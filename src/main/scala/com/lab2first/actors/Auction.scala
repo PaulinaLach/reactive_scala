@@ -24,7 +24,7 @@ sealed trait Data
 case object NotInitialized extends Data
 case class AuctionData(bidValue: Float, winner: ActorRef) extends Data
 
-class Auction(val i: Int) extends FSM[State, Data] {
+class Auction(val i: Int, val seller: ActorRef) extends FSM[State, Data] {
   startWith(InitialState, NotInitialized)
 
   when(InitialState) {
@@ -61,6 +61,7 @@ class Auction(val i: Int) extends FSM[State, Data] {
       stay using newAuctionData
     case Event(StateTimeout, auctionData: AuctionData) =>
       println(s"Auction $i -> sold for ${auctionData.bidValue}")
+      seller ! WinAuction(auctionData.bidValue, i)
       auctionData.winner ! WinAuction(auctionData.bidValue, i)
       goto(Sold) using auctionData
     case Event(_, auctionData: AuctionData) =>

@@ -7,5 +7,7 @@ class Seller(private val auctionTitles: Array[String]) extends Actor {
   override def receive: Receive = {
     case SuccessfulBid(amount) =>
       println(s"Success $amount")
+    case WinAuction(amount, i) =>
+
   }
 }
