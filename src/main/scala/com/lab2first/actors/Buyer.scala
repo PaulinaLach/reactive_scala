@@ -6,7 +6,7 @@ import akka.event.LoggingReceive
 import scala.util.Random
 
 case object Start
-
+case class AudienceName(name: String)
 
 class Buyer(var money: Float, val auctions: Vector[ActorRef]) extends Actor {
   def receive: Receive = LoggingReceive {
@@ -26,5 +26,10 @@ class Buyer(var money: Float, val auctions: Vector[ActorRef]) extends Actor {
       println("Bid failure: ")
     case WinAuction(amount, i) =>
       println(s"$self Won Auction$i with $amount")
+  }
+
+  def searchForAudience: Receive = LoggingReceive {
+    case AudienceName(name) =>
+//      context.actorSelection("/AuctionSearch") ? SearchAuction(name)
   }
 }

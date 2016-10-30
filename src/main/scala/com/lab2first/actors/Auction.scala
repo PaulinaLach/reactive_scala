@@ -29,6 +29,7 @@ class Auction(val i: Int, val seller: ActorRef) extends FSM[State, Data] {
 
   when(InitialState) {
     case Event(InitializeAuction, NotInitialized) =>
+      context.actorSelection("/AuctionSearch") ! Subscribe
       goto(Created) using NotInitialized
   }
 
