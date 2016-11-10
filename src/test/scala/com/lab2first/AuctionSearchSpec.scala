@@ -1,19 +1,20 @@
 package com.lab2first
 
-import org.scalatest.FunSpec
+import akka.actor.ActorSystem
+import akka.testkit.{TestActorRef, TestKit}
+import org.scalatest.{BeforeAndAfterAll, FunSpec, FunSpecLike}
 
-class AuctionSearchSpec extends FunSpec {
-  describe("A Set") {
-    describe("when empty") {
-      it("should have size 0") {
-        assert(Set.empty.size == 0)
+class AuctionSearchSpec extends TestKit(ActorSystem("AuctionSearchSpec")) with FunSpecLike with BeforeAndAfterAll {
+
+  override def afterAll(): Unit = {
+    system.terminate
+  }
+
+  describe("A AuctionSearch") {
+    describe("on received Subscribe") {
+      it("add sender to list") {
       }
 
-      it("should produce NoSuchElementException when head is invoked") {
-        assertThrows[NoSuchElementException] {
-          Set.empty.head
-        }
-      }
     }
   }
 }

@@ -1,5 +1,11 @@
 package com.lab2first
 
-class SellerSpec {
+import akka.actor.ActorSystem
+import akka.testkit.TestKit
+import org.scalatest.{BeforeAndAfterAll, FunSpecLike}
 
+class SellerSpec extends TestKit(ActorSystem("SellerSpec")) with FunSpecLike with BeforeAndAfterAll {
+  override def afterAll(): Unit = {
+    system.terminate
+  }
 }

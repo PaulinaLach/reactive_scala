@@ -2,16 +2,18 @@ package com.lab2first.actors
 
 import akka.actor.{Actor, ActorRef}
 
-case object Subscribe
+case class SubscribeToSearch(title: String)
 case class SearchAuction(value: String)
+case class SearchResponse(results: Seq[ActorRef])
 
 class AuctionSearch extends Actor {
-//  val auctions: List[ActorRef] = new Array[ActorRef](0)
-//
-  def receive(): Receive = {
-    case Subscribe =>
-    case SearchAuction(value) =>
-      sender ! value
-  }
+  private val auctions = new scala.collection.mutable.HashMap[String, ActorRef]
 
+  def receive(): Receive = {
+    case SubscribeToSearch(title) =>
+      println(s"Auction $title added to searcher.")
+      auctions += (title -> sender)
+    case SearchAuction(value) =>
+      sender ! SearchResponse(auctions.filter(_._1.contains(value)).values.toList)
+  }
 }

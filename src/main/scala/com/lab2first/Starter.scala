@@ -1,7 +1,7 @@
 package com.lab2first
 
 import akka.actor.{ActorSystem, Props}
-import com.third.actors.{Auction, Buyer, InitializeAuction, Start}
+import com.lab2first.actors._
 
 /**
  * This is actually just a small wrapper around the generic launcher
@@ -22,10 +22,10 @@ object Starter {
   def main(args: Array[String]): Unit = {
     val system = ActorSystem()
 
-    val auctions = for (i <- 1 to 5) yield system.actorOf(Props(classOf[Auction], i), "Auction" + i)
-    for (auction <- auctions) auction ! InitializeAuction
-    val buyers = for (i <- 1 to 5) yield system.actorOf(Props(classOf[Buyer], 0.0f, auctions), "Buyer" + i)
-    for (buyer <- buyers) buyer ! Start
+    system.actorOf(Props[AuctionSearch], "AuctionSearch")
+
+    val sellers = for (i <- 1 to 5) yield system.actorOf(Props(classOf[Seller], Array("Auction" + i)))
+    val buyers = for (i <- 1 to 5) yield system.actorOf(Props(classOf[Buyer], 0.0f), "Buyer" + i)
 
     Thread sleep 6000
   }

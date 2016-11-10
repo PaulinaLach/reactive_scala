@@ -5,7 +5,7 @@ import akka.actor.{ActorRef, FSM}
 import scala.concurrent.duration._
 
 case class Bid(amount: Float)
-case class WinAuction(amount: Float, i: Int)
+case class WinAuction(amount: Float, i: String)
 case object Relist
 case object BidTimer
 case object DeleteTimer
@@ -24,18 +24,18 @@ sealed trait Data
 case object NotInitialized extends Data
 case class AuctionData(bidValue: Float, winner: ActorRef) extends Data
 
-class Auction(val i: Int, val seller: ActorRef) extends FSM[State, Data] {
+class Auction(val seller: ActorRef) extends FSM[State, Data] {
   startWith(InitialState, NotInitialized)
 
   when(InitialState) {
     case Event(InitializeAuction, NotInitialized) =>
-      context.actorSelection("/AuctionSearch") ! Subscribe
+      context.actorSelection("/user/AuctionSearch") ! SubscribeToSearch(self.toString())
       goto(Created) using NotInitialized
   }
 
   when(Created, stateTimeout = 10 seconds) {
     case Event(StateTimeout, NotInitialized) =>
-      println(s"Auction $i -> ignored")
+      println(s"Auction ${self.toString()} -> ignored")
       goto(Ignored) using NotInitialized
 
     case Event(Bid(amount), NotInitialized) =>
@@ -49,10 +49,10 @@ class Auction(val i: Int, val seller: ActorRef) extends FSM[State, Data] {
 
   when(Ignored, stateTimeout = 20 seconds) {
     case Event(Relist, NotInitialized) =>
-      println(s"Auction $i -> relist")
+      println(s"Auction ${self.toString()} -> relist")
       goto(Created) using NotInitialized
     case Event(DeleteTimer, NotInitialized) =>
-      println(s"Auction $i -> delete")
+      println(s"Auction ${self.toString()} -> delete")
       stay using NotInitialized
   }
 
@@ -61,9 +61,9 @@ class Auction(val i: Int, val seller: ActorRef) extends FSM[State, Data] {
       val newAuctionData = bidAuction(auctionData, amount)
       stay using newAuctionData
     case Event(StateTimeout, auctionData: AuctionData) =>
-      println(s"Auction $i -> sold for ${auctionData.bidValue}")
-      seller ! WinAuction(auctionData.bidValue, i)
-      auctionData.winner ! WinAuction(auctionData.bidValue, i)
+      println(s"Auction ${self.toString()} -> sold for ${auctionData.bidValue}")
+      seller ! WinAuction(auctionData.bidValue, self.toString())
+      auctionData.winner ! WinAuction(auctionData.bidValue, self.toString())
       goto(Sold) using auctionData
     case Event(_, auctionData: AuctionData) =>
       sender ! FailedBid
@@ -72,12 +72,16 @@ class Auction(val i: Int, val seller: ActorRef) extends FSM[State, Data] {
 
   when(Sold, stateTimeout = 10 seconds) {
     case Event(StateTimeout, auctionData: AuctionData) =>
-      println(s"Auction $i -> delete")
+      println(s"Auction ${self.toString()} -> delete")
       stay using auctionData
   }
 
+  override def preStart(): Unit = {
+    println("Auction started")
+  }
+
   private def bidAuction(auctionData: AuctionData, amount: Float): AuctionData = {
-    println(s"auction $i - previous amount: ${auctionData.bidValue} new amount: $amount")
+    println(s"auction ${self.toString()} - previous amount: ${auctionData.bidValue} new amount: $amount")
     sender ! SuccessfulBid(amount)
     AuctionData(amount, sender)
   }
