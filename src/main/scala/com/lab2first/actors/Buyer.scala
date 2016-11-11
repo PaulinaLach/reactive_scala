@@ -12,9 +12,7 @@ case class NotificateBided(amount: Float)
 case class AuctionName(name: String)
 
 class Buyer(var money: Float) extends Actor {
-  val maxAmount: Float = 10000.0f
-
-  private val eventualMasterSearch: Future[ActorRef] = context.actorSelection("/AuctionSearch").resolveOne(1.second)
+  private val eventualMasterSearch: Future[ActorRef] = context.actorSelection("/user/auctionSearch").resolveOne(1.second)
   eventualMasterSearch onSuccess {
     case masterSearch =>
       val title = "Auction" + (Random.nextInt(5 - 1) + 1)
@@ -39,7 +37,8 @@ class Buyer(var money: Float) extends Actor {
       println("Bid failure: ")
     case WinAuction(amount, i) =>
       println(s"$self Won Auction$i with $amount")
-    case NotificateBided(amount) if amount < maxAmount =>
+    case NotificateBided(amount) if amount < money =>
+      println(s"Someone else has bid auction with $amount")
       sender ! Bid(amount + 1)
   }
 }

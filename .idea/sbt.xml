@@ -7,8 +7,8 @@
         <option name="jdk" value="1.8" />
         <option name="modules">
           <set>
-            <option value="/utils/git/akka" />
-            <option value="/utils/git/akka/project" />
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/project" />
           </set>
         </option>
         <option name="sbtVersion" value="0.13.5" />

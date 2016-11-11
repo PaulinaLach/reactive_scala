@@ -1,7 +1,7 @@
 package com.lab2first
 
 import akka.actor.FSM.StateTimeout
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRefFactory, ActorSystem, Props}
 import akka.testkit.{TestFSMRef, TestKit, TestProbe}
 import com.lab2first.actors._
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSpecLike}
@@ -17,51 +17,52 @@ class AuctionSpec extends TestKit(ActorSystem("AuctionSpec")) with FunSpecLike w
   var seller : TestFSMRef[State, Data, Auction] = _
 
   override protected def beforeEach(): Unit = {
-    val seller = system.actorOf(Props(classOf[Seller], Array("asd")))
-    actor = TestFSMRef(new Auction(seller))
+    val seller = TestProbe()
+    actor = TestFSMRef(new Auction())
   }
 
   describe("An Auction") {
     describe("when InitialState") {
       it("initializes properly") {
-        actor ! InitializeAuction
+        val proxy = TestProbe()
+        proxy.send(actor, InitializeAuction("title"))
 
         assert(actor.stateName == Created)
-        assert(actor.stateData == NotInitialized)
+        assert(actor.stateData == Initialized("title", proxy.ref))
       }
     }
 
     describe("when Created") {
       it("is bidded and go to different state") {
         val proxy = TestProbe()
-        actor.setState(Created)
+        actor.setState(Created, Initialized("title", null))
 
         proxy.send(actor, Bid(20.0f))
 
         proxy.expectMsg(SuccessfulBid(20.0f))
 
         assert(actor.stateName == Activated)
-        assert(actor.stateData == AuctionData(20.0f, proxy.ref))
+        assert(actor.stateData == HasBeenBid("title", 20.0f, null, proxy.ref))
       }
 
       it("returns to Ignored after timeout") {
-        actor.setState(Created)
+        actor.setState(Created, Initialized("title", null))
 
         actor ! StateTimeout
 
         assert(actor.stateName == Ignored)
-        assert(actor.stateData == NotInitialized)
+        assert(actor.stateData == Initialized("title", null))
       }
     }
 
     describe("when Ignored") {
       it("returns to Created after Relist") {
-        actor.setState(Ignored)
+        actor.setState(Ignored, Initialized("title", null))
 
         actor ! Relist
 
         assert(actor.stateName == Created)
-        assert(actor.stateData == NotInitialized)
+        assert(actor.stateData == Initialized("title", null))
       }
 
       it("stays after timeout") {
@@ -76,24 +77,40 @@ class AuctionSpec extends TestKit(ActorSystem("AuctionSpec")) with FunSpecLike w
 
     describe("when Activated") {
       it("gets sold after timeout") {
+        val seller = TestProbe()
         val proxy = TestProbe()
-        actor.setState(Activated, AuctionData(0f, proxy.ref))
+        actor.setState(Activated, HasBeenBid("title", 0f, seller.ref, proxy.ref))
 
         proxy.send(actor, StateTimeout)
 
         assert(actor.stateName == Sold)
-        assert(actor.stateData == AuctionData(0f, proxy.ref))
+        assert(actor.stateData == HasBeenBid("title", 0f, seller.ref, proxy.ref))
       }
 
       it("is bidded after Bid event") {
+        val seller = TestProbe()
         val proxy = TestProbe()
-        actor.setState(Activated, AuctionData(20.0f, proxy.ref))
+        actor.setState(Activated, HasBeenBid("title", 0f, seller.ref, proxy.ref))
 
         proxy.send(actor, Bid(40.0f))
 
         proxy.expectMsg(SuccessfulBid(40.0f))
         assert(actor.stateName == Activated)
-        assert(actor.stateData == AuctionData(40.0f, proxy.ref))
+        assert(actor.stateData == HasBeenBid("title", 40.0f, seller.ref, proxy.ref))
+      }
+
+      it("should notify previous bidder") {
+        val seller = TestProbe()
+        val prevBid = TestProbe()
+        val proxy = TestProbe()
+        actor.setState(Activated, HasBeenBid("title", 0f, seller.ref, prevBid.ref))
+
+        proxy.send(actor, Bid(40.0f))
+
+        proxy.expectMsg(SuccessfulBid(40.0f))
+        prevBid.expectMsg(NotificateBided(40.0f))
+        assert(actor.stateName == Activated)
+        assert(actor.stateData == HasBeenBid("title", 40.0f, seller.ref, proxy.ref))
       }
     }
 

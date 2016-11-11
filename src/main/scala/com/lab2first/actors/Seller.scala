@@ -1,6 +1,6 @@
 package com.lab2first.actors
 
-import akka.actor.{Actor, ActorRef, ActorRefFactory, ActorSystem, Props}
+import akka.actor.{Actor, ActorRef, ActorRefFactory}
 
 class Seller(private val auctionTitles: Array[String], auctionMaker: ActorRefFactory => ActorRef) extends Actor {
 

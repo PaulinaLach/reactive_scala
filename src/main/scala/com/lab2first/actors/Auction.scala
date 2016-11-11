@@ -22,56 +22,57 @@ case object Sold extends State
 
 sealed trait Data
 case object NotInitialized extends Data
-case class AuctionData(bidValue: Float, winner: ActorRef) extends Data
+case class Initialized(title: String, seller: ActorRef) extends Data
+case class HasBeenBid(title: String, bidValue: Float, seller: ActorRef, winner: ActorRef) extends Data
 
-class Auction(val seller: ActorRef) extends FSM[State, Data] {
+class Auction extends FSM[State, Data] {
   startWith(InitialState, NotInitialized)
 
   when(InitialState) {
     case Event(InitializeAuction(title), NotInitialized) =>
-      context.actorSelection("/user/auctionSearch") ! SubscribeToSearch(self.toString())
-      goto(Created) using NotInitialized
+      context.actorSelection("/user/auctionSearch") ! SubscribeToSearch(title)
+      goto(Created) using Initialized(title, sender)
   }
 
   when(Created, stateTimeout = 10 seconds) {
-    case Event(StateTimeout, NotInitialized) =>
+    case Event(StateTimeout, initialized: Initialized) =>
       println(s"Auction ${self.toString()} -> ignored")
-      goto(Ignored) using NotInitialized
+      goto(Ignored) using initialized
 
-    case Event(Bid(amount), NotInitialized) =>
-      var auctionData = AuctionData(0.0f, sender)
+    case Event(Bid(amount), initialized: Initialized) =>
+      var auctionData = HasBeenBid(initialized.title, 0.0f, initialized.seller, sender)
       auctionData = bidAuction(auctionData, amount)
       goto(Activated) using auctionData
-    case Event(_, NotInitialized) =>
+    case Event(_, initialized: Initialized) =>
       sender ! FailedBid
-      stay using NotInitialized
+      stay using initialized
   }
 
   when(Ignored, stateTimeout = 20 seconds) {
-    case Event(Relist, NotInitialized) =>
+    case Event(Relist, initialized: Initialized) =>
       println(s"Auction ${self.toString()} -> relist")
-      goto(Created) using NotInitialized
-    case Event(DeleteTimer, NotInitialized) =>
+      goto(Created) using initialized
+    case Event(DeleteTimer, initialized: Initialized) =>
       println(s"Auction ${self.toString()} -> delete")
-      stay using NotInitialized
+      stay using initialized
   }
 
   when(Activated, stateTimeout = 10 seconds) {
-    case Event(Bid(amount), auctionData: AuctionData) if auctionData.bidValue < amount =>
+    case Event(Bid(amount), auctionData: HasBeenBid) if auctionData.bidValue < amount =>
       val newAuctionData = bidAuction(auctionData, amount)
       stay using newAuctionData
-    case Event(StateTimeout, auctionData: AuctionData) =>
+    case Event(StateTimeout, auctionData: HasBeenBid) =>
       println(s"Auction ${self.toString()} -> sold for ${auctionData.bidValue}")
-      seller ! WinAuction(auctionData.bidValue, self.toString())
+      auctionData.seller ! WinAuction(auctionData.bidValue, self.toString())
       auctionData.winner ! WinAuction(auctionData.bidValue, self.toString())
       goto(Sold) using auctionData
-    case Event(_, auctionData: AuctionData) =>
+    case Event(_, auctionData: HasBeenBid) =>
       sender ! FailedBid
       stay using auctionData
   }
 
   when(Sold, stateTimeout = 10 seconds) {
-    case Event(StateTimeout, auctionData: AuctionData) =>
+    case Event(StateTimeout, auctionData: HasBeenBid) =>
       println(s"Auction ${self.toString()} -> delete")
       stay using auctionData
   }
@@ -80,9 +81,10 @@ class Auction(val seller: ActorRef) extends FSM[State, Data] {
     println("Auction started")
   }
 
-  private def bidAuction(auctionData: AuctionData, amount: Float): AuctionData = {
+  private def bidAuction(auctionData: HasBeenBid, amount: Float): HasBeenBid = {
     println(s"auction ${self.toString()} - previous amount: ${auctionData.bidValue} new amount: $amount")
     sender ! SuccessfulBid(amount)
-    AuctionData(amount, sender)
+    if (sender != auctionData.winner) auctionData.winner ! NotificateBided(amount)
+    HasBeenBid(auctionData.title, amount, auctionData.seller, sender)
   }
 }
