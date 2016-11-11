@@ -1,6 +1,6 @@
 package com.lab2first
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRefFactory, ActorSystem, Props}
 import com.lab2first.actors._
 
 /**
@@ -22,9 +22,11 @@ object Starter {
   def main(args: Array[String]): Unit = {
     val system = ActorSystem()
 
-    system.actorOf(Props[AuctionSearch], "AuctionSearch")
+    system.actorOf(Props[AuctionSearch], "auctionSearch")
 
-    val sellers = for (i <- 1 to 5) yield system.actorOf(Props(classOf[Seller], Array("Auction" + i)))
+    val sellers = for (i <- 1 to 5) yield system.actorOf(
+      Props(classOf[Seller], Array("Auction" + i), (f: ActorRefFactory) => f.actorOf(Props[Auction])))
+    )
     val buyers = for (i <- 1 to 5) yield system.actorOf(Props(classOf[Buyer], 0.0f), "Buyer" + i)
 
     Thread sleep 6000

@@ -9,7 +9,7 @@ case class WinAuction(amount: Float, i: String)
 case object Relist
 case object BidTimer
 case object DeleteTimer
-case object InitializeAuction
+case class InitializeAuction(title: String)
 case class SuccessfulBid(amount: Float)
 case object FailedBid
 
@@ -28,8 +28,8 @@ class Auction(val seller: ActorRef) extends FSM[State, Data] {
   startWith(InitialState, NotInitialized)
 
   when(InitialState) {
-    case Event(InitializeAuction, NotInitialized) =>
-      context.actorSelection("/user/AuctionSearch") ! SubscribeToSearch(self.toString())
+    case Event(InitializeAuction(title), NotInitialized) =>
+      context.actorSelection("/user/auctionSearch") ! SubscribeToSearch(self.toString())
       goto(Created) using NotInitialized
   }
 

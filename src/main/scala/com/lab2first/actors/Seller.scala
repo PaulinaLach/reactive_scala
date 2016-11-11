@@ -1,14 +1,13 @@
 package com.lab2first.actors
 
-import akka.actor.{Actor, ActorSystem, Props}
+import akka.actor.{Actor, ActorRef, ActorRefFactory, ActorSystem, Props}
 
-class Seller(private val auctionTitles: Array[String]) extends Actor {
+class Seller(private val auctionTitles: Array[String], auctionMaker: ActorRefFactory => ActorRef) extends Actor {
 
   override def preStart(): Unit = {
-    val system = ActorSystem()
     for (title <- auctionTitles) {
       println(s"Creating auction: $title")
-      system.actorOf(Props(classOf[Auction], self), title) ! InitializeAuction
+      auctionMaker(context) ! InitializeAuction(title)
     }
   }
 
