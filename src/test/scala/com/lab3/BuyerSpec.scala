@@ -1,9 +1,9 @@
-package com.lab2first
+package com.lab3
 
 import akka.actor.ActorSystem
 import akka.actor.FSM.StateTimeout
 import akka.testkit.{TestActorRef, TestFSMRef, TestKit, TestProbe}
-import com.lab2first.actors._
+import com.lab3.actors._
 import scala.concurrent.duration._
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSpecLike}
 

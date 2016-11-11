@@ -1,4 +1,4 @@
-package com.lab2first.actors
+package com.lab3.actors
 
 import akka.actor.{ActorRef, FSM}
 

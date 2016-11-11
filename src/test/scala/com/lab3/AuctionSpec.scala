@@ -1,9 +1,9 @@
-package com.lab2first
+package com.lab3
 
 import akka.actor.FSM.StateTimeout
 import akka.actor.{ActorRefFactory, ActorSystem, Props}
 import akka.testkit.{TestFSMRef, TestKit, TestProbe}
-import com.lab2first.actors._
+import com.lab3.actors._
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSpecLike}
 
 class AuctionSpec extends TestKit(ActorSystem("AuctionSpec")) with FunSpecLike with BeforeAndAfterAll

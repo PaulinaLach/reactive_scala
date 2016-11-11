@@ -1,8 +1,8 @@
-package com.lab2first
+package com.lab3
 
 import akka.actor.ActorSystem
 import akka.testkit.{TestActorRef, TestKit, TestProbe}
-import com.lab2first.actors.{AuctionSearch, SearchAuction, SearchResponse, SubscribeToSearch}
+import com.lab3.actors.{AuctionSearch, SearchAuction, SearchResponse, SubscribeToSearch}
 import org.scalatest.{BeforeAndAfterAll, FunSpec, FunSpecLike}
 
 class AuctionSearchSpec extends TestKit(ActorSystem("AuctionSearchSpec")) with FunSpecLike with BeforeAndAfterAll {

@@ -1,7 +1,7 @@
-package com.lab2first
+package com.lab3
 
 import akka.actor.{ActorRefFactory, ActorSystem, Props}
-import com.lab2first.actors._
+import com.lab3.actors._
 
 import scala.util.Random
 
