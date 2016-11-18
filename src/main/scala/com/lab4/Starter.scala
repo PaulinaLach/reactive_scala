@@ -1,7 +1,7 @@
 package com.lab4
 
 import akka.actor.{ActorRefFactory, ActorSystem, Props}
-import com.lab4.actors.{AuctionSearch, Seller}
+import com.lab4.actors.{Auction, AuctionSearch, Buyer, Seller}
 
 import scala.util.Random
 
@@ -27,7 +27,7 @@ object Starter {
     system.actorOf(Props[AuctionSearch], "auctionSearch")
 
     val sellers = for (i <- 1 to 5) yield system.actorOf(
-      Props(classOf[Seller], Array("Auction" + i), (f: ActorRefFactory) => f.actorOf(Props[Auction]))
+      Props(classOf[Seller], Array("Auction" + i), (f: ActorRefFactory) => f.actorOf(Props(classOf[Auction], "Auction" + i)))
     )
     val buyers = for (i <- 1 to 10)
       yield system.actorOf(Props(classOf[Buyer], Random.nextFloat() + Random.nextInt(1000) + 1000), "Buyer" + i)
