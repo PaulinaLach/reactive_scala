@@ -1,6 +1,7 @@
 package com.lab5.notifications
 
 import akka.actor._
+import com.lab5.notifications.Notifier.Notification
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

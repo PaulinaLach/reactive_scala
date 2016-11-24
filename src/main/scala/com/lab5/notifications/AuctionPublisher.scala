@@ -4,7 +4,7 @@ import akka.actor.Actor
 import akka.actor.Actor.Receive
 import com.lab5.actors.Bid
 
-class AuctionPublisher extends Actor {
+class  AuctionPublisher extends Actor {
   override def receive: Receive = {
     case NewOfferArrived(title, Bid(newOffer, buyer)) =>
       println(s"New offer for auction $title: $newOffer by $buyer")
