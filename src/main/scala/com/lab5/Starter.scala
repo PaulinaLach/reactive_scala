@@ -3,6 +3,7 @@ package com.lab5
 import akka.actor.{ActorRef, ActorRefFactory, ActorSelection, ActorSystem, Props}
 import com.lab5.actors.{Auction, AuctionSearch, Buyer}
 import com.lab5.notifications.{AuctionPublisher, Notifier}
+import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.util.Random
 
@@ -23,7 +24,8 @@ import scala.util.Random
 object Starter {
 
   def main(args: Array[String]): Unit = {
-    val auctionPublisherSystem: ActorSystem = ActorSystem("auction-publisher")
+    val config: Config = ConfigFactory.load()
+    val auctionPublisherSystem: ActorSystem = ActorSystem("auction-publisher", config.getConfig("auction-publisher").withFallback(config))
     auctionPublisherSystem.actorOf(Props[AuctionPublisher], "auction-publisher")
 
     val system = ActorSystem()
@@ -32,9 +34,8 @@ object Starter {
 
     val sellers = for (i <- 1 to 5) yield system.actorOf(
       Props(classOf[actors.Seller], Array("Auction" + i), (f: ActorRefFactory) => {
-
-        val publisher: ActorSelection = f.actorSelection("akka.tcp://auction-publisher@127.0.0.1:2553/user/auction-publisher")
-        val notifier: ActorRef = f.actorOf(Props(classOf[Notifier], publisher))
+        
+        val notifier: ActorRef = f.actorOf(Props(classOf[Notifier], () => f.actorSelection("akka.tcp://auction-publisher@127.0.0.1:2553/user/auction-publisher")))
         f.actorOf(Props(classOf[Auction], "Auction" + i, notifier))
       })
     )

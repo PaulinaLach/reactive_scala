@@ -1,7 +1,9 @@
 package com.lab5.notifications
 
 import akka.actor._
-import com.lab5.notifications.Notifier.Notification
+import com.lab5.notifications.AuctionPublisher.ReceivedNotification
+import com.lab5.notifications.Notifier.{Notification, NotificationPayload}
+import com.lab5.notifications.NotifierRequest.SuccessfullyDeliveredNotification
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

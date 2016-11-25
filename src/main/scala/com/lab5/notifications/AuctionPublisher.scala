@@ -3,10 +3,11 @@ package com.lab5.notifications
 import akka.actor.Actor
 import akka.actor.Actor.Receive
 import com.lab5.actors.Bid
+import com.lab5.notifications.AuctionPublisher.ReceivedNotification
 
 class  AuctionPublisher extends Actor {
   override def receive: Receive = {
-    case NewOfferArrived(title, Bid(newOffer, buyer)) =>
+    case NewOfferArrived(title, newOffer, buyer) =>
       println(s"New offer for auction $title: $newOffer by $buyer")
       sender() ! ReceivedNotification
 
@@ -14,8 +15,14 @@ class  AuctionPublisher extends Actor {
       println(s"There were no offers for auction $title")
       sender() ! ReceivedNotification
 
-    case EndedWithWinner(title, Bid(winningPrice, winner)) =>
+    case EndedWithWinner(title, winningPrice, winner) =>
       println(s"Buyer $winner won auction $title with price $winningPrice")
       sender() ! ReceivedNotification
   }
+}
+
+object AuctionPublisher {
+
+  case object ReceivedNotification
+
 }
