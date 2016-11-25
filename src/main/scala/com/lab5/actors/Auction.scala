@@ -3,7 +3,7 @@ package com.lab5.actors
 import akka.actor.{Actor, ActorRef}
 import akka.persistence.fsm.PersistentFSM
 import akka.persistence.fsm.PersistentFSM.FSMState
-import com.lab5.notifications.{AuctionNotification, EndedWithWinner, EndedWithoutOffers, NewOfferArrived}
+import com.lab5.notifications.{AuctionNotification, EndedWithOffer, EndedNoOffers, NewOffer}
 
 import scala.concurrent.duration._
 import scala.reflect.{ClassTag, _}
@@ -75,14 +75,14 @@ class Auction(val name: String, notifier: ActorRef) extends Actor with Persisten
   when(Created) {
     case Event(StateTimeout, _) =>
       println(s"Auction ${self.toString()} -> ignored")
-      sendNotification(EndedWithoutOffers(name))
+      sendNotifierNotification(EndedNoOffers(name))
       goto(Ignored) applying AuctionIgnoredEvent() // applying initialized
 
     case Event(Bid(amount), _) =>
       auctionData.bidValue = 0.0f
       auctionData.winner = sender
       auctionData.bidAuction(amount, sender)
-      sendNotification(NewOfferArrived(name, amount, sender()))
+      sendNotifierNotification(NewOffer(name, amount, sender()))
       goto(Activated) applying AuctionActivatedEvent() // applying auctionData
     case Event(_, _) =>
       sender ! FailedBid
@@ -101,13 +101,13 @@ class Auction(val name: String, notifier: ActorRef) extends Actor with Persisten
   when(Activated) {
     case Event(Bid(amount), _) if auctionData.bidValue < amount =>
       auctionData.bidAuction(amount, sender)
-      sendNotification(NewOfferArrived(name, amount, sender()))
+      sendNotifierNotification(NewOffer(name, amount, sender()))
       stay applying AuctionActivatedEvent()
     case Event(StateTimeout, _) =>
       println(s"Auction ${self.toString()} -> sold for ${auctionData.bidValue}")
       auctionData.seller ! WinAuction(auctionData.bidValue, self.toString())
       auctionData.winner ! WinAuction(auctionData.bidValue, self.toString())
-      sendNotification(EndedWithWinner(name, auctionData.bidValue, auctionData.winner))
+      sendNotifierNotification(EndedWithOffer(name, auctionData.bidValue, auctionData.winner))
       goto(Sold) applying AuctionSoldEvent
     case Event(_, _) =>
       sender ! FailedBid
@@ -138,7 +138,7 @@ class Auction(val name: String, notifier: ActorRef) extends Actor with Persisten
       data
   }
 
-  private def sendNotification(notification: AuctionNotification): Unit = {
+  private def sendNotifierNotification(notification: AuctionNotification): Unit = {
     notifier ! notification
   }
 }

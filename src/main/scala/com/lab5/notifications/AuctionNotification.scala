@@ -7,8 +7,8 @@ sealed trait AuctionNotification extends NotificationPayload {
   def auctionTitle: String
 }
 
-case class NewOfferArrived(auctionTitle: String, newHighestOffer: Float, sender: ActorRef) extends AuctionNotification
+case class NewOffer(auctionTitle: String, amount: Float, sender: ActorRef) extends AuctionNotification
 
-case class EndedWithoutOffers(auctionTitle: String) extends AuctionNotification
+case class EndedNoOffers(auctionTitle: String) extends AuctionNotification
 
-case class EndedWithWinner(auctionTitle: String, winningOffer: Float, sender: ActorRef) extends AuctionNotification
+case class EndedWithOffer(auctionTitle: String, amount: Float, sender: ActorRef) extends AuctionNotification

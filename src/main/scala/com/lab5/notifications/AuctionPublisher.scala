@@ -1,28 +1,24 @@
 package com.lab5.notifications
 
 import akka.actor.Actor
-import akka.actor.Actor.Receive
-import com.lab5.actors.Bid
-import com.lab5.notifications.AuctionPublisher.ReceivedNotification
+import com.lab5.notifications.AuctionPublisher.NotificationReceived
 
 class  AuctionPublisher extends Actor {
   override def receive: Receive = {
-    case NewOfferArrived(title, newOffer, buyer) =>
-      println(s"New offer for auction $title: $newOffer by $buyer")
-      sender() ! ReceivedNotification
+    case NewOffer(title, amount, buyer) =>
+      println(s"Got offer for auction $title: $amount by $buyer")
+      sender ! NotificationReceived
 
-    case EndedWithoutOffers(title) =>
-      println(s"There were no offers for auction $title")
-      sender() ! ReceivedNotification
+    case EndedNoOffers(title) =>
+      println(s"No offers for auction $title")
+      sender ! NotificationReceived
 
-    case EndedWithWinner(title, winningPrice, winner) =>
-      println(s"Buyer $winner won auction $title with price $winningPrice")
-      sender() ! ReceivedNotification
+    case EndedWithOffer(title, amount, winner) =>
+      println(s"$winner won auction $title with price $amount")
+      sender ! NotificationReceived
   }
 }
 
 object AuctionPublisher {
-
-  case object ReceivedNotification
-
+  case object NotificationReceived
 }

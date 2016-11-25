@@ -1,6 +1,6 @@
 package com.lab5
 
-import akka.actor.{ActorRef, ActorRefFactory, ActorSelection, ActorSystem, Props}
+import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, Props}
 import com.lab5.actors.{Auction, AuctionSearch, Buyer}
 import com.lab5.notifications.{AuctionPublisher, Notifier}
 import com.typesafe.config.{Config, ConfigFactory}
