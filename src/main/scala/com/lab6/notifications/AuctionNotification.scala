@@ -1,7 +1,7 @@
 package com.lab6.notifications
 
 import akka.actor.ActorRef
-import com.lab5.notifications.Notifier.NotificationPayload
+import com.lab6.notifications.Notifier.NotificationPayload
 
 sealed trait AuctionNotification extends NotificationPayload {
   def auctionTitle: String

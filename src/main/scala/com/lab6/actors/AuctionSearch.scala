@@ -2,7 +2,7 @@ package com.lab6.actors
 
 import akka.actor.{Actor, ActorRef}
 
-case class SubscribeToSearch(title: String)
+case class SubscribeToSearch(title: String, auction: ActorRef)
 case class SearchAuction(value: String)
 case class SearchResponse(results: Seq[ActorRef])
 
@@ -10,9 +10,9 @@ class AuctionSearch extends Actor {
   val auctions = new scala.collection.mutable.HashMap[String, ActorRef]
 
   def receive(): Receive = {
-    case SubscribeToSearch(title) =>
+    case SubscribeToSearch(title, auction) =>
       println(s"Auction $title added to searcher.")
-      auctions += (title -> sender)
+      auctions += (title -> auction)
     case SearchAuction(value) =>
       println(s"Searching for $value")
       println(s"Data in search $auctions")
@@ -22,4 +22,9 @@ class AuctionSearch extends Actor {
   }
 
 
+}
+
+case object AuctionSearch {
+  case class Registered(auction: SubscribeToSearch)
+  case class Unregistered(auction: SubscribeToSearch)
 }

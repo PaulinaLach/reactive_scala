@@ -1,7 +1,7 @@
 package com.lab6.notifications
 
 import akka.actor.Actor
-import com.lab5.notifications.AuctionPublisher.NotificationReceived
+import com.lab6.notifications.AuctionPublisher.NotificationReceived
 
 class AuctionPublisher extends Actor {
   override def receive: Receive = {

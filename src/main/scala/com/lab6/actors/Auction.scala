@@ -3,7 +3,7 @@ package com.lab6.actors
 import akka.actor.{Actor, ActorRef}
 import akka.persistence.fsm.PersistentFSM
 import akka.persistence.fsm.PersistentFSM.FSMState
-import com.lab5.notifications.{AuctionNotification, EndedNoOffers, EndedWithOffer, NewOffer}
+import com.lab6.notifications.{AuctionNotification, EndedNoOffers, EndedWithOffer, NewOffer}
 
 import scala.concurrent.duration._
 import scala.reflect.{ClassTag, _}
@@ -66,7 +66,6 @@ class Auction(val name: String, notifier: ActorRef) extends Actor with Persisten
 
   when(InitialState) {
     case Event(InitializeAuction(title), _) =>
-      context.actorSelection("/user/auctionSearch") ! SubscribeToSearch(title)
       auctionData.title = title
       auctionData.seller = sender
       goto(Created) applying AuctionInitializedEvent // applying Initialized(title, sender)

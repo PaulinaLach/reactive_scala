@@ -3,11 +3,12 @@ package com.lab6.actors
 import akka.actor.{Actor, ActorRef, ActorRefFactory}
 
 class Seller(private val auctionTitles: Array[String], auctionMaker: ActorRefFactory => ActorRef) extends Actor {
-
   override def preStart(): Unit = {
     for (title <- auctionTitles) {
       println(s"Creating auction: $title")
-      auctionMaker(context) ! InitializeAuction(title)
+      val auction = auctionMaker(context)
+      auction ! InitializeAuction(title)
+      context.actorSelection("/user/auctionSearch") ! SubscribeToSearch(title, auction)
     }
   }
 
@@ -17,4 +18,9 @@ class Seller(private val auctionTitles: Array[String], auctionMaker: ActorRefFac
     case WinAuction(amount, i) =>
       println(s"Won auction with $amount")
   }
+}
+
+object Seller {
+  case class Register(subscribeToSearch: SubscribeToSearch)
+  case class Unregister(subscribeToSearch: SubscribeToSearch)
 }

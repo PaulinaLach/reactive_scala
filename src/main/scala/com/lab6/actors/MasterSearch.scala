@@ -3,14 +3,12 @@ package auction.system.auctionsearch
 import akka.actor.{Actor, ActorRef, Props}
 import akka.event.LoggingReceive
 import akka.routing.{ActorRefRoutee, Broadcast, Router, RoutingLogic}
-import auction.system.Buyer.FindAuctions
-import auction.system.Seller.{AuctionRef, Register, Unregister}
-import auction.system.auctionsearch.AuctionSearch.{Registered, Unregistered}
+import com.lab6.actors.AuctionSearch.{Registered, Unregistered}
+import com.lab6.actors.{RegistrationCache, SearchAuction, SubscribeToSearch}
+import com.lab6.actors.Seller.{Register, Unregister}
 
 class MasterSearch(numberOfRoutes: Int, dispatchingStrategy: RoutingLogic, routeFactory: () => ActorRef) extends Actor {
-
   val ackCache: RegistrationCache = RegistrationCache(numberOfRoutes)
-
   val router = createRouterWith(routesNumber = numberOfRoutes, routingStrategy = dispatchingStrategy)
 
   private def createRouterWith(routesNumber: Int, routingStrategy: RoutingLogic): Router = {
@@ -32,22 +30,22 @@ class MasterSearch(numberOfRoutes: Int, dispatchingStrategy: RoutingLogic, route
       scheduleUnregisteredAcknowledgmentFor(auction, sender())
       router.route(Broadcast(msg), self)
 
-    case msg: FindAuctions =>
+    case msg: SearchAuction =>
       router.route(msg, sender())
 
     case Registered(auction) =>
-      ackCache.registerActionAcknowledged(auction)
+      ackCache.registerActionResponse(auction)
 
     case Unregistered(auction) =>
-      ackCache.unregisterActionAcknowledged(auction)
+      ackCache.unregisterActionResponse(auction)
   }
 
-  def scheduleRegisteredAcknowledgmentFor(auction: AuctionRef, seller: ActorRef) = {
-    ackCache.scheduleCallbackOnRegisterActionAcknowledged(auction, auction => seller ! Registered(auction))
+  def scheduleRegisteredAcknowledgmentFor(auction: SubscribeToSearch, seller: ActorRef) = {
+    ackCache.scheduleCallbackOnRegisterActionResponse(auction, auction => seller ! Registered(auction))
   }
 
-  def scheduleUnregisteredAcknowledgmentFor(auction: AuctionRef, seller: ActorRef) = {
-    ackCache.scheduleCallbackOnUnregisterActionAcknowledged(auction, auction => seller ! Unregistered(auction))
+  def scheduleUnregisteredAcknowledgmentFor(auction: SubscribeToSearch, seller: ActorRef) = {
+    ackCache.scheduleCallbackOnUnregisterResponse(auction, auction => seller ! Unregistered(auction))
   }
 }
 

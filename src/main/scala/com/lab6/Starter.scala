@@ -1,8 +1,8 @@
 package com.lab6
 
 import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, Props}
-import com.lab5.actors.{Auction, AuctionSearch, Buyer}
-import com.lab5.notifications.{AuctionPublisher, Notifier}
+import com.lab6.actors.{Auction, AuctionSearch, Buyer}
+import com.lab6.notifications.{AuctionPublisher, Notifier}
 import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.util.Random

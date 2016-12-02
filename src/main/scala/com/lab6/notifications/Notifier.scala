@@ -2,8 +2,8 @@ package com.lab6.notifications
 
 import akka.actor.SupervisorStrategy.{Escalate, Restart}
 import akka.actor.{Actor, ActorLogging, ActorNotFound, ActorSelection, OneForOneStrategy, Props, SupervisorStrategy}
-import com.lab5.notifications.Notifier.{Notification, NotificationPayload}
-import com.lab5.notifications.NotifierRequest.SuccessDeliver
+import com.lab6.notifications.Notifier.{Notification, NotificationPayload}
+import com.lab6.notifications.NotifierRequest.SuccessDeliver
 
 class Notifier(auctionPublisher: () => ActorSelection) extends Actor with ActorLogging {
   private val maxRetries = 1000
