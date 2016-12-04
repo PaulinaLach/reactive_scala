@@ -1,10 +1,9 @@
-package auction.system.auctionsearch
+package com.lab6.actors
 
 import akka.actor.{Actor, ActorRef, Props}
 import akka.event.LoggingReceive
 import akka.routing.{ActorRefRoutee, Broadcast, Router, RoutingLogic}
 import com.lab6.actors.AuctionSearch.{Registered, Unregistered}
-import com.lab6.actors.{RegistrationCache, SearchAuction, SubscribeToSearch}
 import com.lab6.actors.Seller.{Register, Unregister}
 
 class MasterSearch(numberOfRoutes: Int, dispatchingStrategy: RoutingLogic, routeFactory: () => ActorRef) extends Actor {
@@ -19,6 +18,14 @@ class MasterSearch(numberOfRoutes: Int, dispatchingStrategy: RoutingLogic, route
   private def singleRoute: ActorRefRoutee = {
     val route = routeFactory()
     ActorRefRoutee(route)
+  }
+
+  def scheduleRegisteredAcknowledgmentFor(auction: SubscribeToSearch, seller: ActorRef) = {
+    ackCache.scheduleCallbackOnRegisterActionResponse(auction, auction => seller ! Registered(auction))
+  }
+
+  def scheduleUnregisteredAcknowledgmentFor(auction: SubscribeToSearch, seller: ActorRef) = {
+    ackCache.scheduleCallbackOnUnregisterResponse(auction, auction => seller ! Unregistered(auction))
   }
 
   override def receive: Receive = LoggingReceive {
@@ -38,14 +45,6 @@ class MasterSearch(numberOfRoutes: Int, dispatchingStrategy: RoutingLogic, route
 
     case Unregistered(auction) =>
       ackCache.unregisterActionResponse(auction)
-  }
-
-  def scheduleRegisteredAcknowledgmentFor(auction: SubscribeToSearch, seller: ActorRef) = {
-    ackCache.scheduleCallbackOnRegisterActionResponse(auction, auction => seller ! Registered(auction))
-  }
-
-  def scheduleUnregisteredAcknowledgmentFor(auction: SubscribeToSearch, seller: ActorRef) = {
-    ackCache.scheduleCallbackOnUnregisterResponse(auction, auction => seller ! Unregistered(auction))
   }
 }
 

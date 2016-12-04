@@ -4,29 +4,30 @@ case class RegistrationCache(expectedResp: Int) {
   val registerResponses: ResponseCache = ResponseCache()
   val unregisterResponses: ResponseCache = ResponseCache()
 
-  def scheduleCallbackOnRegisterActionResponse(auction: SubscribeToSearch, onRespAcquired: SubscribeToSearch => Unit): Unit = {
-    registerResponses.scheduleCallbackOnResponse(auction, expectedResp, onRespAcquired)
-  }
 
-  def registerActionResponse(auction: SubscribeToSearch): Unit = registerResponses.acknowledge(auction)
+  def registerActionResponse(auction: SubscribeToSearch): Unit = registerResponses.confirm(auction)
 
   def scheduleCallbackOnUnregisterResponse(auction: SubscribeToSearch, onRespAcquired: SubscribeToSearch => Unit): Unit = {
     unregisterResponses.scheduleCallbackOnResponse(auction, expectedResp, onRespAcquired)
   }
 
-  def unregisterActionResponse(auction: SubscribeToSearch): Unit = unregisterResponses.acknowledge(auction)
+  def scheduleCallbackOnRegisterActionResponse(auction: SubscribeToSearch, onRespAcquired: SubscribeToSearch => Unit): Unit = {
+    registerResponses.scheduleCallbackOnResponse(auction, expectedResp, onRespAcquired)
+  }
+
+  def unregisterActionResponse(auction: SubscribeToSearch): Unit = unregisterResponses.confirm(auction)
 }
 
 case class ResponseCache() {
   var responses: Map[SubscribeToSearch, ResponseItem] = Map()
 
-  def scheduleCallbackOnResponse(auction: SubscribeToSearch, expectedResp: Int, onRespAcquired: SubscribeToSearch => Unit): Unit = {
-    responses += (auction -> ResponseItem(expectedResp, 0, onRespAcquired))
-  }
-
-  def acknowledge(auction: SubscribeToSearch): Unit = {
+  def confirm(auction: SubscribeToSearch): Unit = {
     val maybeItem: Option[ResponseItem] = responses.get(auction)
     maybeItem foreach increaseRespCount(auction)
+  }
+
+  def scheduleCallbackOnResponse(auction: SubscribeToSearch, expectedResp: Int, onRespAcquired: SubscribeToSearch => Unit): Unit = {
+    responses += (auction -> ResponseItem(expectedResp, 0, onRespAcquired))
   }
 
   def increaseRespCount(subscribeToSearch: SubscribeToSearch)(item: ResponseItem): Unit = {
